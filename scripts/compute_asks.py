@@ -86,6 +86,7 @@ status=SUPPRESSED and no ask.
 import argparse
 import csv
 import json
+import math
 import sys
 from collections import Counter
 from datetime import date
@@ -108,6 +109,17 @@ NON_BLOCKING_FLAGS = {"no_title_on_file_used_full_name"}
 
 # Gift years before this are treated as data corruption rather than history.
 MIN_PLAUSIBLE_GIFT_YEAR = 1900
+
+# Tiers whose ask is a percentage of the largest gift, and so must have a
+# rate; and tiers whose ask is a flat amount. A policy override that drops
+# any of these would fail on the first donor who lands in that tier, so the
+# absence is caught at load time instead.
+REQUIRED_TIER_RATES = ("Platinum", "Gold", "Silver")
+REQUIRED_FLAT_ASKS = ("Bronze", "Lapsed")
+POLICY_MAP_KEYS = {
+    "tier_rates": frozenset(REQUIRED_TIER_RATES),
+    "flat_asks": frozenset(REQUIRED_FLAT_ASKS),
+}
 
 # Byte signatures for file types users commonly hand over instead of a CSV.
 _NON_CSV_SIGNATURES: list[tuple[bytes, str]] = [
@@ -185,8 +197,18 @@ _POLICY_KINDS: dict[str, str] = {
 
 
 def _is_nonneg_number(value: object) -> bool:
-    """True for a non-negative int/float. Rejects bools (bool is an int in Python)."""
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0
+    """True for a finite, non-negative int/float.
+
+    Rejects bools (bool is an int in Python) and rejects Infinity/NaN, which
+    Python's json module accepts as literals even though standard JSON does
+    not - an infinite multiplier would otherwise reach the ask calculation.
+    """
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and value >= 0
+    )
 
 
 def load_policy(path: str | None) -> AskPolicy:
@@ -245,12 +267,32 @@ def load_policy(path: str | None) -> AskPolicy:
                 f"policy key '{key}' has invalid value {value!r} "
                 f"(expected something shaped like {default!r})"
             )
-        policy[key] = value  # type: ignore[literal-required]
+        if kind == "number_map":
+            value_map = cast(dict[str, float], value)
+            unknown_nested = set(value_map) - POLICY_MAP_KEYS[key]
+            if unknown_nested:
+                fail(
+                    f"policy key '{key}' contains unknown tier(s): "
+                    f"{sorted(unknown_nested)}. Valid tiers: "
+                    f"{sorted(POLICY_MAP_KEYS[key])}"
+                )
+            # Merge rather than replace. Overriding one rate is the common
+            # case, and a wholesale replacement would silently drop the tiers
+            # the file does not mention - which then fails mid-run with a
+            # KeyError on the first donor in a missing tier.
+            merged = dict(policy[key])  # type: ignore[literal-required]
+            merged.update(value_map)
+            policy[key] = merged  # type: ignore[literal-required]
+        else:
+            policy[key] = value  # type: ignore[literal-required]
 
     # Cross-field checks that a per-key type check cannot catch.
     if policy["rounding_increment"] <= 0:
         fail("rounding_increment must be greater than zero")
-    for tier in ("Bronze", "Lapsed"):
+    for tier in REQUIRED_TIER_RATES:
+        if tier not in policy["tier_rates"]:
+            fail(f"tier_rates must define '{tier}'")
+    for tier in REQUIRED_FLAT_ASKS:
         if tier not in policy["flat_asks"]:
             fail(f"flat_asks must define '{tier}'")
 
@@ -564,9 +606,13 @@ def main() -> None:
     )
     # A repeated donor_id is a separate problem: letters are written to
     # letter_<donor_id>.html, so duplicates would overwrite each other and
-    # one donor would silently receive nothing.
+    # one donor would silently receive nothing. Compared case-insensitively
+    # because Windows and macOS filesystems are - "D1" and "d1" are distinct
+    # IDs that resolve to the same file.
     id_counts = Counter(
-        (get(r, "donor_id") or "").strip() for r in rows if (get(r, "donor_id") or "").strip()
+        (get(r, "donor_id") or "").strip().casefold()
+        for r in rows
+        if (get(r, "donor_id") or "").strip()
     )
 
     out_rows: list[dict[str, str | int]] = []
@@ -604,10 +650,16 @@ def main() -> None:
             flags.append("missing_name")
         if first and last and name_counts[(first.lower(), last.lower())] > 1:
             flags.append("duplicate_donor_name")
-        if donor_id and id_counts[donor_id] > 1:
+        if donor_id and id_counts[donor_id.casefold()] > 1:
             flags.append("duplicate_donor_id")
         if lifetime is None:
             flags.append("missing_lifetime_total")
+        elif not math.isfinite(lifetime):
+            # "Infinity" and "NaN" parse as floats. Unflagged, Infinity
+            # reaches the letter as a lifetime total of "$inf" and NaN
+            # silently fails every comparison, leaving a held row with no
+            # explanation of what is wrong with it.
+            flags.append("non_finite_lifetime_total")
         elif lifetime < 0:
             # A negative total is a refund/reversal artefact, not a donor
             # who has given negative money. Left unflagged it can produce a
@@ -615,6 +667,8 @@ def main() -> None:
             flags.append("negative_lifetime_total")
         if largest is None:
             flags.append("missing_largest_gift")
+        elif not math.isfinite(largest):
+            flags.append("non_finite_largest_gift")
         elif largest < 0:
             flags.append("negative_largest_gift")
         if last_year is None:
@@ -629,7 +683,11 @@ def main() -> None:
         engagement: str | None = None
         ask: int | None = None
 
-        if not suppressed and lifetime is not None and lifetime >= 0:
+        # Usable means present, finite and non-negative. Anything else is
+        # corrupt data that has already been flagged above.
+        lifetime_usable = lifetime is not None and math.isfinite(lifetime) and lifetime >= 0
+
+        if not suppressed and lifetime_usable:
             tier = financial_tier(lifetime)
             engagement = (
                 "Lapsed"
@@ -655,9 +713,10 @@ def main() -> None:
 
             # A largest-gift figure is required for every Current-donor ask:
             # the percentage tiers multiply it, and Bronze compares its flat
-            # ask against it. A negative value is corrupt rather than small,
-            # and is flagged above; either way no ask is computed.
-            largest_usable = largest is not None and largest >= 0
+            # ask against it. A negative or non-finite value is corrupt
+            # rather than small, and is flagged above; either way no ask is
+            # computed from it.
+            largest_usable = largest is not None and math.isfinite(largest) and largest >= 0
 
             if engagement == "Lapsed":
                 # Flat re-engagement ask - needs no largest-gift figure.
@@ -735,6 +794,10 @@ def main() -> None:
                 "volunteer": "Yes" if volunteer else "No",
                 "ask_amount": ask if ask is not None else "",
                 "ask_amount_display": f"{ask:,.0f}" if ask is not None else "",
+                # Recorded per row so the review file is self-describing and
+                # the renderer cannot pick a call to action for a different
+                # channel than the one these suppression rules were applied for.
+                "channel": args.channel,
                 "status": status,
                 "flags": "; ".join(flags),
             }

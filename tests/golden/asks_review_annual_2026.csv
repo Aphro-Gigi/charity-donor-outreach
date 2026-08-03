@@ -1,51 +1,51 @@
-row,donor_id,first_name,last_name,region,tier,engagement,segment,salutation,lifetime_total,lifetime_total_display,largest_gift,largest_gift_display,last_gift_year,volunteer,ask_amount,ask_amount_display,status,flags
-2,row2,Robert,Svensson,Northeast,Platinum,Lapsed,Lapsed,"We've missed you, Robert!",145000,"145,000",50000,"50,000",2020,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-3,row3,Earl,Fontaine,Southeast,Platinum,Lapsed,Lapsed,"We've missed you, Earl!",275000,"275,000",90000,"90,000",2022,Yes,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-4,row4,Walter,Adeyemi,Midwest,Platinum,Lapsed,Lapsed,"We've missed you, Walter!",75000,"75,000",30000,"30,000",2020,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-5,row5,Ralph,Osei-Bonsu,West,Platinum,Current,Platinum,"Dear Ralph Osei-Bonsu,",235000,"235,000",80000,"80,000",2023,Yes,32100,"32,100",OK,no_title_on_file_used_full_name
-6,row6,Victor,Ambrosius,International,Platinum,Lapsed,Lapsed,"We've missed you, Victor!",165000,"165,000",55000,"55,000",2021,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-7,row7,James,Whitfield,Northeast,Gold,Lapsed,Lapsed,"We've missed you, James!",35000,"35,000",12000,"12,000",2022,Yes,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-8,row8,Dorothy,Callahan,Southeast,Gold,Current,Gold,"Dear Dorothy Callahan,",11000,"11,000",3500,"3,500",2023,No,900,900,OK,no_title_on_file_used_full_name
-9,row9,Deborah,Sorenson,Midwest,Gold,Lapsed,Lapsed,"We've missed you, Deborah!",22000,"22,000",7000,"7,000",2022,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-10,row10,Angela,Petersen,West,Gold,Lapsed,Lapsed,"We've missed you, Angela!",13500,"13,500",5500,"5,500",2021,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-11,row11,Grace,Thornton,International,Gold,Current,Gold,"Dear Grace Thornton,",13000,"13,000",4000,"4,000",2023,No,1000,"1,000",OK,no_title_on_file_used_full_name
-12,row12,Linda,Petrov,Northeast,Gold,Current,Gold,"Dear Linda Petrov,",37500,"37,500",15000,"15,000",2023,No,3750,"3,750",OK,no_title_on_file_used_full_name
-13,row13,Helen,Magnusson,Southeast,Gold,Lapsed,Lapsed,"We've missed you, Helen!",30000,"30,000",12000,"12,000",2022,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-14,row14,Maria,Yamamoto,Midwest,Gold,Lapsed,Lapsed,"We've missed you, Maria!",22500,"22,500",9000,"9,000",2022,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-15,row15,Emma,Bergstrom,West,Gold,Current,Gold,"Dear Emma Bergstrom,",19500,"19,500",8000,"8,000",2023,No,2000,"2,000",OK,no_title_on_file_used_full_name
-16,row16,Nora,Bergqvist,International,Gold,Lapsed,Lapsed,"We've missed you, Nora!",33000,"33,000",13000,"13,000",2022,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-17,row17,Nancy,Okafor,Southeast,Gold,Lapsed,Lapsed,"We've missed you, Nancy!",18500,"18,500",7500,"7,500",2021,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-18,row18,Vera,Johansson,International,Gold,Lapsed,Lapsed,"We've missed you, Vera!",24000,"24,000",9000,"9,000",2021,No,50,50,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
-19,row19,Margaret,Alcott,Northeast,Silver,Current,Silver,"Hi Margaret,",4950,"4,950",1500,"1,500",2023,No,250,250,OK,
-20,row20,Harold,Mensah,Southeast,Silver,Current,Silver,"Hi Harold,",3600,"3,600",1400,"1,400",2023,Yes,300,300,OK,
-21,row21,Barbara,Jensen,Midwest,Silver,Current,Silver,"Hi Barbara,",4500,"4,500",2000,"2,000",2023,No,300,300,OK,
-22,row22,Betty,Nakagawa,West,Silver,Current,Silver,"Hi Betty,",6000,"6,000",2500,"2,500",2023,No,400,400,OK,
-23,row23,Ada,Yamamoto-Pierce,International,Gold,Current,Gold,"Dear Ada Yamamoto-Pierce,",17000,"17,000",5000,"5,000",2023,Yes,1350,"1,350",NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
-24,row24,Claire,Oduya,Northeast,Silver,Current,Silver,"Hi Claire,",6500,"6,500",3000,"3,000",2023,Yes,550,550,OK,
-25,row25,Ruth,Andersen,Southeast,Gold,Current,Gold,"Dear Ruth Andersen,",25000,"25,000",7000,"7,000",2023,Yes,1850,"1,850",NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
-26,row26,Janet,Okonkwo,Midwest,Silver,Current,Silver,"Hi Janet,",7500,"7,500",3000,"3,000",2023,Yes,550,550,OK,
-27,row27,Shirley,Magnusdottir,West,Gold,Current,Gold,"Dear Shirley Magnusdottir,",22000,"22,000",7000,"7,000",2023,Yes,1850,"1,850",NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
-28,row28,Owen,Oduya,International,Silver,Current,Silver,"Hi Owen,",3000,"3,000",1200,"1,200",2023,Yes,300,300,OK,
-29,row29,Susan,Nakamura,Northeast,Silver,Current,Silver,"Hi Susan,",5000,"5,000",1500,"1,500",2024,Yes,350,350,OK,
-30,row30,Joe,Iwamoto,West,Silver,Current,Silver,"Hi Joe,",4050,"4,050",1300,"1,300",2023,Yes,300,300,OK,
-31,row31,Michael,Torres,Northeast,Silver,Lapsed,Lapsed,"We've missed you, Michael!",1800,"1,800",700,700,2019,No,50,50,OK,
-32,row32,Charles,Kimura,Southeast,Silver,Lapsed,Lapsed,"We've missed you, Charles!",1200,"1,200",400,400,2017,No,50,50,OK,
-33,row33,Paul,Achebe,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Paul!",900,900,300,300,2019,No,50,50,OK,
-34,row34,Frank,Watanabe,West,Silver,Lapsed,Lapsed,"We've missed you, Frank!",1050,"1,050",350,350,2018,No,50,50,OK,
-35,row35,Lars,Achebe-Nielsen,International,Silver,Lapsed,Lapsed,"We've missed you, Lars!",1200,"1,200",400,400,2017,No,50,50,OK,
-36,row36,Thomas,Bergmann,Northeast,Bronze,Lapsed,Lapsed,"We've missed you, Thomas!",600,600,300,300,2015,No,50,50,OK,
-37,row37,Frank,Dimitriou,Southeast,Bronze,Lapsed,Lapsed,"We've missed you, Frank!",600,600,200,200,2018,No,50,50,OK,
-38,row38,Raymond,Volkov,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Raymond!",500,500,250,250,2020,No,50,50,OK,
-39,row39,Henry,Obi,West,Bronze,Lapsed,Lapsed,"We've missed you, Henry!",350,350,200,200,2019,No,50,50,OK,
-40,row40,Felix,Mensah-Bonsu,International,Bronze,Lapsed,Lapsed,"We've missed you, Felix!",600,600,300,300,2020,No,50,50,OK,
-41,row41,Patricia,Huang,Northeast,Bronze,Lapsed,Lapsed,"We've missed you, Patricia!",450,450,250,250,2022,No,50,50,OK,
-42,row42,Brenda,Kowalski,Southeast,Bronze,Current,Bronze,"Hi Brenda,",150,150,150,150,2023,No,150,150,OK,
-43,row43,Carol,Eriksson,Midwest,Bronze,Current,Bronze,"Hi Carol,",100,100,100,100,2023,No,150,150,OK,
-44,row44,Kathy,Lindberg,West,Bronze,Lapsed,Lapsed,"We've missed you, Kathy!",125,125,125,125,2022,No,50,50,OK,
-45,row45,Iris,Kowalczyk,International,Bronze,Current,Bronze,"Hi Iris,",200,200,200,200,2023,No,150,150,OK,
-46,row46,David,Osei,Northeast,Bronze,Current,Bronze,"Hi David,",175,175,100,100,2023,No,150,150,OK,
-47,row47,George,Nwosu,Southeast,Bronze,Current,Bronze,"Hi George,",125,125,75,75,2023,No,150,150,OK,
-48,row48,Samuel,Lindqvist,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Samuel!",50,50,50,50,2022,No,50,50,OK,
-49,row49,Jack,Nkemdirim,West,Bronze,Current,Bronze,"Hi Jack,",50,50,50,50,2023,No,150,150,NEEDS_REVIEW,flat_ask_exceeds_review_multiple_of_largest_gift
-50,row50,Igor,Volkov,International,Bronze,Lapsed,Lapsed,"We've missed you, Igor!",75,75,75,75,2022,No,50,50,OK,
-51,row51,Arthur,Mwangi,Midwest,Silver,Current,Silver,"Hi Arthur,",2600,"2,600",800,800,2023,Yes,200,200,NEEDS_REVIEW,"tier_mismatch(file=Bronze,computed=Silver)"
+row,donor_id,first_name,last_name,region,tier,engagement,segment,salutation,lifetime_total,lifetime_total_display,largest_gift,largest_gift_display,last_gift_year,volunteer,ask_amount,ask_amount_display,channel,status,flags
+2,row2,Robert,Svensson,Northeast,Platinum,Lapsed,Lapsed,"We've missed you, Robert!",145000,"145,000",50000,"50,000",2020,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+3,row3,Earl,Fontaine,Southeast,Platinum,Lapsed,Lapsed,"We've missed you, Earl!",275000,"275,000",90000,"90,000",2022,Yes,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+4,row4,Walter,Adeyemi,Midwest,Platinum,Lapsed,Lapsed,"We've missed you, Walter!",75000,"75,000",30000,"30,000",2020,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+5,row5,Ralph,Osei-Bonsu,West,Platinum,Current,Platinum,"Dear Ralph Osei-Bonsu,",235000,"235,000",80000,"80,000",2023,Yes,32100,"32,100",email,OK,no_title_on_file_used_full_name
+6,row6,Victor,Ambrosius,International,Platinum,Lapsed,Lapsed,"We've missed you, Victor!",165000,"165,000",55000,"55,000",2021,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+7,row7,James,Whitfield,Northeast,Gold,Lapsed,Lapsed,"We've missed you, James!",35000,"35,000",12000,"12,000",2022,Yes,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+8,row8,Dorothy,Callahan,Southeast,Gold,Current,Gold,"Dear Dorothy Callahan,",11000,"11,000",3500,"3,500",2023,No,900,900,email,OK,no_title_on_file_used_full_name
+9,row9,Deborah,Sorenson,Midwest,Gold,Lapsed,Lapsed,"We've missed you, Deborah!",22000,"22,000",7000,"7,000",2022,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+10,row10,Angela,Petersen,West,Gold,Lapsed,Lapsed,"We've missed you, Angela!",13500,"13,500",5500,"5,500",2021,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+11,row11,Grace,Thornton,International,Gold,Current,Gold,"Dear Grace Thornton,",13000,"13,000",4000,"4,000",2023,No,1000,"1,000",email,OK,no_title_on_file_used_full_name
+12,row12,Linda,Petrov,Northeast,Gold,Current,Gold,"Dear Linda Petrov,",37500,"37,500",15000,"15,000",2023,No,3750,"3,750",email,OK,no_title_on_file_used_full_name
+13,row13,Helen,Magnusson,Southeast,Gold,Lapsed,Lapsed,"We've missed you, Helen!",30000,"30,000",12000,"12,000",2022,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+14,row14,Maria,Yamamoto,Midwest,Gold,Lapsed,Lapsed,"We've missed you, Maria!",22500,"22,500",9000,"9,000",2022,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+15,row15,Emma,Bergstrom,West,Gold,Current,Gold,"Dear Emma Bergstrom,",19500,"19,500",8000,"8,000",2023,No,2000,"2,000",email,OK,no_title_on_file_used_full_name
+16,row16,Nora,Bergqvist,International,Gold,Lapsed,Lapsed,"We've missed you, Nora!",33000,"33,000",13000,"13,000",2022,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+17,row17,Nancy,Okafor,Southeast,Gold,Lapsed,Lapsed,"We've missed you, Nancy!",18500,"18,500",7500,"7,500",2021,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+18,row18,Vera,Johansson,International,Gold,Lapsed,Lapsed,"We've missed you, Vera!",24000,"24,000",9000,"9,000",2021,No,50,50,email,NEEDS_REVIEW,lapsed_major_donor_personal_outreach_recommended
+19,row19,Margaret,Alcott,Northeast,Silver,Current,Silver,"Hi Margaret,",4950,"4,950",1500,"1,500",2023,No,250,250,email,OK,
+20,row20,Harold,Mensah,Southeast,Silver,Current,Silver,"Hi Harold,",3600,"3,600",1400,"1,400",2023,Yes,300,300,email,OK,
+21,row21,Barbara,Jensen,Midwest,Silver,Current,Silver,"Hi Barbara,",4500,"4,500",2000,"2,000",2023,No,300,300,email,OK,
+22,row22,Betty,Nakagawa,West,Silver,Current,Silver,"Hi Betty,",6000,"6,000",2500,"2,500",2023,No,400,400,email,OK,
+23,row23,Ada,Yamamoto-Pierce,International,Gold,Current,Gold,"Dear Ada Yamamoto-Pierce,",17000,"17,000",5000,"5,000",2023,Yes,1350,"1,350",email,NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
+24,row24,Claire,Oduya,Northeast,Silver,Current,Silver,"Hi Claire,",6500,"6,500",3000,"3,000",2023,Yes,550,550,email,OK,
+25,row25,Ruth,Andersen,Southeast,Gold,Current,Gold,"Dear Ruth Andersen,",25000,"25,000",7000,"7,000",2023,Yes,1850,"1,850",email,NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
+26,row26,Janet,Okonkwo,Midwest,Silver,Current,Silver,"Hi Janet,",7500,"7,500",3000,"3,000",2023,Yes,550,550,email,OK,
+27,row27,Shirley,Magnusdottir,West,Gold,Current,Gold,"Dear Shirley Magnusdottir,",22000,"22,000",7000,"7,000",2023,Yes,1850,"1,850",email,NEEDS_REVIEW,"tier_mismatch(file=Silver,computed=Gold); no_title_on_file_used_full_name"
+28,row28,Owen,Oduya,International,Silver,Current,Silver,"Hi Owen,",3000,"3,000",1200,"1,200",2023,Yes,300,300,email,OK,
+29,row29,Susan,Nakamura,Northeast,Silver,Current,Silver,"Hi Susan,",5000,"5,000",1500,"1,500",2024,Yes,350,350,email,OK,
+30,row30,Joe,Iwamoto,West,Silver,Current,Silver,"Hi Joe,",4050,"4,050",1300,"1,300",2023,Yes,300,300,email,OK,
+31,row31,Michael,Torres,Northeast,Silver,Lapsed,Lapsed,"We've missed you, Michael!",1800,"1,800",700,700,2019,No,50,50,email,OK,
+32,row32,Charles,Kimura,Southeast,Silver,Lapsed,Lapsed,"We've missed you, Charles!",1200,"1,200",400,400,2017,No,50,50,email,OK,
+33,row33,Paul,Achebe,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Paul!",900,900,300,300,2019,No,50,50,email,OK,
+34,row34,Frank,Watanabe,West,Silver,Lapsed,Lapsed,"We've missed you, Frank!",1050,"1,050",350,350,2018,No,50,50,email,OK,
+35,row35,Lars,Achebe-Nielsen,International,Silver,Lapsed,Lapsed,"We've missed you, Lars!",1200,"1,200",400,400,2017,No,50,50,email,OK,
+36,row36,Thomas,Bergmann,Northeast,Bronze,Lapsed,Lapsed,"We've missed you, Thomas!",600,600,300,300,2015,No,50,50,email,OK,
+37,row37,Frank,Dimitriou,Southeast,Bronze,Lapsed,Lapsed,"We've missed you, Frank!",600,600,200,200,2018,No,50,50,email,OK,
+38,row38,Raymond,Volkov,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Raymond!",500,500,250,250,2020,No,50,50,email,OK,
+39,row39,Henry,Obi,West,Bronze,Lapsed,Lapsed,"We've missed you, Henry!",350,350,200,200,2019,No,50,50,email,OK,
+40,row40,Felix,Mensah-Bonsu,International,Bronze,Lapsed,Lapsed,"We've missed you, Felix!",600,600,300,300,2020,No,50,50,email,OK,
+41,row41,Patricia,Huang,Northeast,Bronze,Lapsed,Lapsed,"We've missed you, Patricia!",450,450,250,250,2022,No,50,50,email,OK,
+42,row42,Brenda,Kowalski,Southeast,Bronze,Current,Bronze,"Hi Brenda,",150,150,150,150,2023,No,150,150,email,OK,
+43,row43,Carol,Eriksson,Midwest,Bronze,Current,Bronze,"Hi Carol,",100,100,100,100,2023,No,150,150,email,OK,
+44,row44,Kathy,Lindberg,West,Bronze,Lapsed,Lapsed,"We've missed you, Kathy!",125,125,125,125,2022,No,50,50,email,OK,
+45,row45,Iris,Kowalczyk,International,Bronze,Current,Bronze,"Hi Iris,",200,200,200,200,2023,No,150,150,email,OK,
+46,row46,David,Osei,Northeast,Bronze,Current,Bronze,"Hi David,",175,175,100,100,2023,No,150,150,email,OK,
+47,row47,George,Nwosu,Southeast,Bronze,Current,Bronze,"Hi George,",125,125,75,75,2023,No,150,150,email,OK,
+48,row48,Samuel,Lindqvist,Midwest,Bronze,Lapsed,Lapsed,"We've missed you, Samuel!",50,50,50,50,2022,No,50,50,email,OK,
+49,row49,Jack,Nkemdirim,West,Bronze,Current,Bronze,"Hi Jack,",50,50,50,50,2023,No,150,150,email,NEEDS_REVIEW,flat_ask_exceeds_review_multiple_of_largest_gift
+50,row50,Igor,Volkov,International,Bronze,Lapsed,Lapsed,"We've missed you, Igor!",75,75,75,75,2022,No,50,50,email,OK,
+51,row51,Arthur,Mwangi,Midwest,Silver,Current,Silver,"Hi Arthur,",2600,"2,600",800,800,2023,Yes,200,200,email,NEEDS_REVIEW,"tier_mismatch(file=Bronze,computed=Silver)"
