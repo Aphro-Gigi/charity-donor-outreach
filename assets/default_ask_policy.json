@@ -1,0 +1,21 @@
+{
+  "tier_rates": {
+    "Platinum": 0.4,
+    "Gold": 0.25,
+    "Silver": 0.15
+  },
+  "flat_asks": {
+    "Bronze": 150,
+    "Lapsed": 50
+  },
+  "loyalty_uplift_enabled": true,
+  "loyalty_uplift_rate": 0.1,
+  "volunteer_bonus_enabled": true,
+  "volunteer_bonus_amount": 100,
+  "emergency_multiplier_enabled": true,
+  "emergency_multiplier": 1.2,
+  "rounding_increment": 50,
+  "cap_at_largest_gift": true,
+  "flat_ask_review_multiple": 3.0,
+  "lapsed_major_lifetime_threshold": 10000
+}
