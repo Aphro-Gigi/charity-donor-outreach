@@ -22,9 +22,10 @@ Both promises live in the two scripts, so both are tested here:
   * a golden-file test pins the full 50-donor output, so any change to the
     rules shows up as a reviewable diff rather than a silent shift in what
     donors get asked for;
-  * targeted tests cover each rule and each refusal path, including the
-    specific defects found during review (banker's rounding, negative
-    amounts, a capped ask escaping review, channel-blind suppression).
+  * targeted tests cover the business rules, documented refusal paths, and
+    specific defects found during review (including banker's rounding,
+    negative amounts, a capped ask escaping review, and channel-blind
+    suppression).
 """
 
 import csv
@@ -203,6 +204,47 @@ class TestPolicyLoader(SkillTestCase):
         self.assertIn("policy file not found", result.stderr)
         self.assertNotIn("Traceback", result.stderr)
 
+    def test_partial_tier_rates_merge_over_defaults(self) -> None:
+        """Regression: replacing tier_rates wholesale dropped the tiers the
+        file did not mention, then died with KeyError on the first donor who
+        landed in one."""
+        path = self.tmp / "policy.json"
+        path.write_text('{"tier_rates": {"Gold": 0.2}}', encoding="utf-8")
+        rows = [
+            ["D1", "A", "Gold", 15000, 10000, 2023, "No", ""],
+            ["D2", "B", "Platinum", 60000, 10000, 2023, "No", ""],
+        ]
+        out = self.compute(rows, "--policy", str(path))
+        self.assertEqual(out[0]["ask_amount"], "2000")  # overridden 20%
+        self.assertEqual(out[1]["ask_amount"], "4000")  # default 40% still present
+
+    def test_tier_rate_cannot_be_removed(self) -> None:
+        path = self.tmp / "policy.json"
+        path.write_text('{"tier_rates": {"Platinum": 0.4}}', encoding="utf-8")
+        rows = [["D1", "A", "B", 5000, 1500, 2025, "No", ""]]
+        src = write_csv(self.tmp / "donors.csv", DONOR_HEADER, rows)
+        result = run(COMPUTE, str(src), str(self.tmp / "o.csv"), "--policy", str(path))
+        # Merging keeps Gold and Silver, so this is accepted rather than
+        # failing - the point is that no tier can go missing.
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_non_finite_policy_values_are_rejected(self) -> None:
+        # Python's json module accepts Infinity as a literal even though
+        # standard JSON does not.
+        self.assertIn("invalid value", self._policy_error('{"emergency_multiplier": Infinity}'))
+
+    def test_unknown_nested_policy_tier_fails_loudly(self) -> None:
+        """A typo inside a nested map used to be accepted and ignored even
+        though the skill promises that unknown policy keys fail loudly."""
+        for payload, typo in (
+            ('{"tier_rates": {"Goold": 0.2}}', "Goold"),
+            ('{"flat_asks": {"Bronz": 100}}', "Bronz"),
+        ):
+            with self.subTest(typo=typo):
+                message = self._policy_error(payload)
+                self.assertIn("unknown tier", message)
+                self.assertIn(typo, message)
+
     def test_override_changes_the_ask(self) -> None:
         path = self.tmp / "policy.json"
         path.write_text('{"volunteer_bonus_enabled": false}', encoding="utf-8")
@@ -315,6 +357,35 @@ class TestReviewGate(SkillTestCase):
         self.assertEqual(out[0]["status"], "NEEDS_REVIEW")
         self.assertIn("negative_lifetime_total", out[1]["flags"])
         self.assertEqual(out[1]["status"], "NEEDS_REVIEW")
+
+    def test_non_finite_amounts_are_held_with_an_explanatory_flag(self) -> None:
+        """Regression: 'Infinity' in lifetime_total produced status OK and a
+        letter reading "$inf"; 'NaN' produced a held row with an empty flags
+        column; 'Infinity' in largest_gift crashed the rounding step with
+        decimal.InvalidOperation."""
+        rows = [
+            ["D1", "Inf", "Lifetime", "Infinity", 10000, 2025, "No", ""],
+            ["D2", "Nan", "Lifetime", "NaN", 10000, 2025, "No", ""],
+            ["D3", "Inf", "Largest", 60000, "Infinity", 2025, "No", ""],
+        ]
+        out = self.compute(rows)
+        self.assertIn("non_finite_lifetime_total", out[0]["flags"])
+        self.assertIn("non_finite_lifetime_total", out[1]["flags"])
+        self.assertIn("non_finite_largest_gift", out[2]["flags"])
+        for row in out:
+            self.assertEqual(row["ask_amount"], "")
+            self.assertEqual(row["status"], "NEEDS_REVIEW")
+
+    def test_case_only_duplicate_ids_are_flagged(self) -> None:
+        """Regression: 'D1' and 'd1' were treated as distinct IDs, then
+        resolved to the same filename on a case-insensitive filesystem."""
+        rows = [
+            ["D1", "Ann", "One", 5000, 1500, 2025, "No", ""],
+            ["d1", "Bob", "Two", 5000, 1500, 2025, "No", ""],
+        ]
+        out = self.compute(rows)
+        self.assertTrue(all("duplicate_donor_id" in r["flags"] for r in out))
+        self.assertTrue(all(r["status"] == "NEEDS_REVIEW" for r in out))
 
     def test_missing_financial_fields_are_never_guessed(self) -> None:
         rows = [
@@ -631,6 +702,123 @@ class TestRendering(SkillTestCase):
         self.assertEqual(second.returncode, 1)
         self.assertIn("already contains", second.stderr)
         self.assertEqual(self.render(GOLDEN, out_dir, "--force").returncode, 0)
+
+    def test_force_clears_the_previous_run_rather_than_overwriting_part_of_it(self) -> None:
+        """Regression: --force wrote over the letters it produced but left
+        the rest, so a shorter second run left 33 files on disk beside a
+        manifest listing one - exactly the mixing --force claims to prevent."""
+        out_dir = self.tmp / "letters"
+        self.assertEqual(self.render(GOLDEN, out_dir).returncode, 0)
+        first_count = len(list(out_dir.glob("letter_*.html")))
+        self.assertGreater(first_count, 1)
+
+        self.assertEqual(self.render(GOLDEN, out_dir, "--limit", "1", "--force").returncode, 0)
+        self.assertEqual(len(list(out_dir.glob("letter_*.html"))), 1)
+        with open(out_dir / "letters_manifest.csv", newline="", encoding="utf-8") as f:
+            self.assertEqual(len(list(csv.DictReader(f))), 1)
+
+    def test_force_does_not_clear_output_when_the_run_will_fail(self) -> None:
+        """The clear happens after validation, so a bad content file cannot
+        destroy the last good campaign."""
+        out_dir = self.tmp / "letters"
+        self.assertEqual(self.render(GOLDEN, out_dir).returncode, 0)
+        before = len(list(out_dir.glob("letter_*.html")))
+
+        broken = self.tmp / "broken.json"
+        broken.write_text('{"campaign_paragraphs": {}, "tier_lines": {}}', encoding="utf-8")
+        result = run(
+            RENDER, str(GOLDEN), str(out_dir),
+            "--content", str(broken), *self.RENDER_ARGS, "--force",
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(list(out_dir.glob("letter_*.html"))), before)
+
+    def test_force_does_not_clear_output_when_template_rendering_fails(self) -> None:
+        """Regression: an unsupported template placeholder was discovered
+        only after --force deleted the previous campaign."""
+        out_dir = self.tmp / "letters"
+        self.assertEqual(self.render(GOLDEN, out_dir).returncode, 0)
+        before = len(list(out_dir.glob("letter_*.html")))
+        manifest_before = (out_dir / "letters_manifest.csv").read_text(encoding="utf-8")
+
+        broken_template = self.tmp / "broken_template.html"
+        broken_template.write_text(
+            "<html><body>[UNKNOWN_PLACEHOLDER]</body></html>",
+            encoding="utf-8",
+        )
+        result = self.render(
+            GOLDEN, out_dir, "--template", str(broken_template), "--force",
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("UNKNOWN_PLACEHOLDER", result.stderr)
+        self.assertEqual(len(list(out_dir.glob("letter_*.html"))), before)
+        self.assertEqual(
+            (out_dir / "letters_manifest.csv").read_text(encoding="utf-8"),
+            manifest_before,
+        )
+
+    def test_case_only_donor_ids_are_refused_before_writing(self) -> None:
+        """Regression: two IDs differing only in case produced two manifest
+        rows but a single file on Windows and macOS."""
+        review = self.tmp / "review.csv"
+        src = write_csv(
+            self.tmp / "donors.csv",
+            DONOR_HEADER,
+            [
+                ["D1", "Ann", "One", 5000, 1500, 2025, "No", ""],
+                ["d1", "Bob", "Two", 5000, 1500, 2025, "No", ""],
+            ],
+        )
+        run(COMPUTE, str(src), str(review), "--campaign-year", "2026")
+        out_dir = self.tmp / "letters"
+        result = self.render(review, out_dir, "--include-flagged")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("both resolve to", result.stderr)
+        # Nothing may be written when the batch cannot be rendered safely.
+        self.assertEqual(len(list(out_dir.glob("letter_*.html"))), 0)
+
+    def test_limit_must_be_a_positive_integer(self) -> None:
+        """Regression: --limit 0 was falsy and rendered the entire list;
+        negative values sliced from the end."""
+        for bad in ("0", "-5", "abc"):
+            result = self.render(GOLDEN, self.tmp / f"letters_{bad}", "--limit", bad)
+            self.assertEqual(result.returncode, 2, bad)
+            self.assertEqual(len(list((self.tmp / f"letters_{bad}").glob("*.html"))), 0)
+
+    def test_call_to_action_follows_the_delivery_channel(self) -> None:
+        """Regression: the template always said "reply to this email", even
+        for a printed mailing."""
+        src = write_csv(
+            self.tmp / "donors.csv",
+            DONOR_HEADER,
+            [["D1", "Ann", "One", 5000, 1500, 2025, "No", ""]],
+        )
+        for channel, expected, forbidden in (
+            ("email", "reply to this email", None),
+            ("mail", "To give, visit", "reply to this email"),
+        ):
+            review = self.tmp / f"review_{channel}.csv"
+            run(COMPUTE, str(src), str(review), "--campaign-year", "2026", "--channel", channel)
+            out_dir = self.tmp / f"letters_{channel}"
+            self.assertEqual(self.render(review, out_dir).returncode, 0)
+            letter = (out_dir / "letter_D1.html").read_text(encoding="utf-8")
+            self.assertIn(expected, letter, channel)
+            if forbidden:
+                self.assertNotIn(forbidden, letter, channel)
+
+    def test_review_file_mixing_channels_is_refused(self) -> None:
+        """Rows computed under different channels had different suppression
+        rules applied, so they cannot share one mailing."""
+        rows = read_rows(GOLDEN)
+        rows[0]["channel"] = "mail"
+        mixed = self.tmp / "mixed.csv"
+        with open(mixed, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            writer.writeheader()
+            writer.writerows(rows)
+        result = self.render(mixed, self.tmp / "letters")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("mixes delivery channels", result.stderr)
 
     def test_wrong_input_file_is_diagnosed(self) -> None:
         result = self.render(FIXTURE, self.tmp / "letters")
