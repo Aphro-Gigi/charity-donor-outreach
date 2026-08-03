@@ -8,7 +8,10 @@
   Supplied per donor from the review CSV (HTML-escaped by the renderer):
       [SALUTATION]  [LIFETIME_TOTAL]  [ASK_AMOUNT]
   Supplied once per campaign from the command line:
-      [DATE]  [CHARITY_NAME]  [DONATION_URL]  [SIGNER_NAME]  [SIGNER_TITLE]
+      [DATE]  [CHARITY_NAME]  [SIGNER_NAME]  [SIGNER_TITLE]
+  Built from the delivery channel recorded in the review CSV, and carrying
+  the donation URL, so a printed letter does not say "reply to this email":
+      [CALL_TO_ACTION]
   Supplied per segment from content.json (inserted as HTML, so inline
   markup such as <em> works):
       [CAMPAIGN_PARAGRAPH]  [TIER_SPECIFIC_LINE]
@@ -35,8 +38,7 @@
   <p>Today, we invite you to consider a gift of
   <strong>$[ASK_AMOUNT]</strong>. [TIER_SPECIFIC_LINE]</p>
 
-  <p>To give, simply reply to this email or visit
-  <strong>[DONATION_URL]</strong>.</p>
+  <p>[CALL_TO_ACTION]</p>
 
   <p>With gratitude,<br>
   <strong>[SIGNER_NAME]</strong><br>

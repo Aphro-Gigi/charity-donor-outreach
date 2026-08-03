@@ -45,6 +45,15 @@ SAFETY PROPERTIES
   * SUPPRESSED rows are never rendered. There is no flag to override this.
   * NEEDS_REVIEW rows are not rendered without --include-flagged, which
     exists for the case where staff have reviewed and accepted the rows.
+  * --force clears the previous run's letters and manifest rather than
+    writing over some of them, so a shorter second run cannot leave another
+    campaign's letters behind. Every letter is preflight-rendered first, so
+    an input, template or content failure cannot destroy good output.
+  * Filenames are resolved for the whole batch before anything is written,
+    and compared case-insensitively, so no donor can silently overwrite
+    another on a case-insensitive filesystem.
+  * The closing call to action follows the delivery channel recorded in the
+    review CSV: a printed letter does not tell the donor to hit reply.
   * Every value that came from the donor file is HTML-escaped.
   * Content blocks from content.json are treated as trusted HTML fragments
     (they are written by staff/the assistant, not by the data) so that
@@ -80,6 +89,16 @@ REQUIRED_REVIEW_COLUMNS = {
 # Every segment compute_asks.py can emit. Used to build the content scaffold.
 KNOWN_SEGMENTS = ["Platinum", "Gold", "Silver", "Bronze", "Lapsed"]
 
+# The closing call to action, per delivery channel. "Reply to this email"
+# is wrong on a printed letter, so the wording follows the channel the
+# review file was computed for rather than being fixed in the template.
+# {url} is substituted with the already-escaped donation URL.
+CALL_TO_ACTION = {
+    "email": "To give, simply reply to this email or visit <strong>{url}</strong>.",
+    "mail": "To give, visit <strong>{url}</strong>.",
+}
+DEFAULT_CHANNEL = "email"
+
 # donor_id goes straight into a filename, so restrict it to characters that
 # are safe on every filesystem. Prevents a CSV cell like "../../etc/passwd"
 # or "CON" from steering where files land.
@@ -89,6 +108,49 @@ UNSAFE_FILENAME_CHARS = re.compile(r"[^A-Za-z0-9_.-]")
 def fail(message: str) -> NoReturn:
     """Exit(1) with the standard error prefix used across this skill."""
     sys.exit(f"ERROR: {message}")
+
+
+def positive_int(raw: str) -> int:
+    """argparse type for counts that must be 1 or more.
+
+    Without this, --limit 0 is falsy and renders the whole list, and a
+    negative value slices from the end - both silently produce a mailing
+    nobody asked for.
+    """
+    try:
+        value = int(raw)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{raw!r} is not an integer") from None
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be 1 or greater (got {value})")
+    return value
+
+
+def review_channel(rows: list[dict[str, str]]) -> str:
+    """Determine which delivery channel the review file was computed for.
+
+    Older review files predate the column, so its absence falls back to
+    email rather than failing. A file containing more than one channel was
+    assembled by hand from separate runs and is refused: the suppression
+    rules applied to those rows disagree with each other.
+    """
+    channels = {(row.get("channel") or "").strip().lower() for row in rows}
+    channels.discard("")
+    if not channels:
+        return DEFAULT_CHANNEL
+    if len(channels) > 1:
+        fail(
+            f"review CSV mixes delivery channels {sorted(channels)}. Each run of "
+            f"compute_asks.py applies one channel's suppression rules; render "
+            f"each run's output separately."
+        )
+    channel = channels.pop()
+    if channel not in CALL_TO_ACTION:
+        fail(
+            f"review CSV has unknown channel {channel!r} "
+            f"(expected one of {sorted(CALL_TO_ACTION)})"
+        )
+    return channel
 
 
 def safe_filename_part(donor_id: str) -> str:
@@ -254,9 +316,10 @@ def render_one(
         # --- from the operator ---
         "DATE": html.escape(campaign_fields["date"]),
         "CHARITY_NAME": html.escape(campaign_fields["charity"]),
-        "DONATION_URL": html.escape(campaign_fields["donation_url"]),
         "SIGNER_NAME": html.escape(campaign_fields["signer_name"]),
         "SIGNER_TITLE": html.escape(campaign_fields["signer_title"]),
+        # Built from the channel; contains the escaped URL already.
+        "CALL_TO_ACTION": campaign_fields["call_to_action"],
         # --- authored prose, trusted as HTML ---
         "CAMPAIGN_PARAGRAPH": content["campaign_paragraphs"][segment],
         "TIER_SPECIFIC_LINE": content["tier_lines"][segment],
@@ -299,7 +362,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="HTML template (defaults to the bundled assets/letter_template.html)",
     )
     ap.add_argument("--date", default=None, help="Letter date, YYYY-MM-DD (defaults to today)")
-    ap.add_argument("--limit", type=int, default=None, help="Render at most N letters (for previews)")
+    ap.add_argument(
+        "--limit",
+        type=positive_int,
+        default=None,
+        help="Render at most N letters, N >= 1 (for previews)",
+    )
     ap.add_argument(
         "--include-flagged",
         action="store_true",
@@ -419,36 +487,63 @@ def main() -> None:
     if existing and not args.force:
         fail(
             f"{out_dir} already contains {len(existing)} letter file(s). "
-            f"Use a fresh directory, or pass --force to overwrite."
+            f"Use a fresh directory, or pass --force to replace them."
         )
 
+    channel = review_channel(rows)
     campaign_fields = {
         "date": letter_date,
         "charity": args.charity,
-        "donation_url": args.donation_url,
         "signer_name": args.signer_name,
         "signer_title": args.signer_title,
+        "call_to_action": CALL_TO_ACTION[channel].format(url=html.escape(args.donation_url)),
     }
 
-    to_render = selected[: args.limit] if args.limit else selected
+    to_render = selected[: args.limit] if args.limit is not None else selected
 
-    manifest: list[dict[str, str]] = []
-    written_paths: set[str] = set()
+    # Resolve every filename before writing anything, so a collision is
+    # reported instead of one donor silently overwriting another. Compared
+    # case-insensitively because Windows and macOS filesystems are: "D1" and
+    # "d1" are distinct IDs that resolve to the same file.
+    filenames: list[str] = []
+    claimed: dict[str, str] = {}
     for row in to_render:
         donor_id = (row.get("donor_id") or "").strip()
         if not donor_id:
             fail("a mailable row has no donor_id; re-run compute_asks.py")
-
         filename = f"letter_{safe_filename_part(donor_id)}.html"
-        if filename in written_paths:
-            # Two donor_ids that differ only in characters we sanitised
-            # would otherwise silently overwrite one another.
+        previous = claimed.get(filename.casefold())
+        if previous is not None:
             fail(
-                f"donor_id {donor_id!r} collides with an earlier row after "
-                f"filename sanitisation ({filename}). Give donors distinct IDs."
+                f"donor_id {donor_id!r} and {previous!r} both resolve to "
+                f"{filename}, so one letter would overwrite the other. Give "
+                f"donors IDs that differ by more than case or punctuation."
             )
-        written_paths.add(filename)
+        claimed[filename.casefold()] = donor_id
+        filenames.append(filename)
 
+    # Preflight every deterministic render before removing the previous
+    # campaign. This catches unsupported/leftover template placeholders and
+    # row-specific missing values without retaining every rendered letter in
+    # memory. render_one has no side effects, so it is safe to call again in
+    # the write loop below.
+    for row in to_render:
+        render_one(template, row, content, campaign_fields)
+
+    # Clear the previous campaign only now that every input and every letter
+    # has validated. Filesystem write failures are still reported normally,
+    # but no known template/content error can destroy the last good output.
+    if existing and args.force:
+        stale = [*existing, out_dir / "letters_manifest.csv"]
+        for path in stale:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as exc:
+                fail(f"could not remove stale file {path}: {exc}")
+
+    manifest: list[dict[str, str]] = []
+    for row, filename in zip(to_render, filenames):
+        donor_id = (row.get("donor_id") or "").strip()
         letter = render_one(template, row, content, campaign_fields)
         try:
             (out_dir / filename).write_text(letter, encoding="utf-8")
@@ -476,7 +571,9 @@ def main() -> None:
     except OSError as exc:
         fail(f"could not write {manifest_path}: {exc}")
 
-    print(f"Rendered {len(manifest)} letter(s) to {out_dir}")
+    print(f"Rendered {len(manifest)} letter(s) to {out_dir} | channel={channel}")
+    if existing and args.force:
+        print(f"  --force replaced {len(existing)} letter(s) from a previous run")
     if args.limit and len(selected) > len(to_render):
         print(f"  --limit {args.limit} applied; {len(selected) - len(to_render)} mailable row(s) not rendered")
     if flagged_count:
