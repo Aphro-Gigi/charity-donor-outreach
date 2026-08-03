@@ -1,0 +1,46 @@
+<!--
+  Letter template for the charity-donor-outreach skill.
+
+  Placeholders are ALL-CAPS names in square brackets. scripts/render_letters.py
+  substitutes every one of them and aborts if any is left unfilled, so a
+  letter can never go out with a literal [PLACEHOLDER] in it.
+
+  Supplied per donor from the review CSV (HTML-escaped by the renderer):
+      [SALUTATION]  [LIFETIME_TOTAL]  [ASK_AMOUNT]
+  Supplied once per campaign from the command line:
+      [DATE]  [CHARITY_NAME]  [DONATION_URL]  [SIGNER_NAME]  [SIGNER_TITLE]
+  Supplied per segment from content.json (inserted as HTML, so inline
+  markup such as <em> works):
+      [CAMPAIGN_PARAGRAPH]  [TIER_SPECIFIC_LINE]
+
+  Styling is inline because email clients strip <style> blocks. If you edit
+  this file, keep the placeholder names identical - the renderer matches
+  them literally.
+
+  This comment is stripped from rendered letters by the renderer.
+-->
+<html>
+<body style="font-family: Georgia, serif; padding: 30px; max-width: 600px; color: #222;">
+
+  <p style="text-align:right; color: #888;">[DATE]</p>
+
+  <p>[SALUTATION]</p>
+
+  <p>On behalf of everyone at <strong>[CHARITY_NAME]</strong>, thank you for
+  your generosity. Your lifetime support of <strong>$[LIFETIME_TOTAL]</strong>
+  has made a real difference to the animals we serve.</p>
+
+  <p>[CAMPAIGN_PARAGRAPH]</p>
+
+  <p>Today, we invite you to consider a gift of
+  <strong>$[ASK_AMOUNT]</strong>. [TIER_SPECIFIC_LINE]</p>
+
+  <p>To give, simply reply to this email or visit
+  <strong>[DONATION_URL]</strong>.</p>
+
+  <p>With gratitude,<br>
+  <strong>[SIGNER_NAME]</strong><br>
+  [SIGNER_TITLE], [CHARITY_NAME]</p>
+
+</body>
+</html>

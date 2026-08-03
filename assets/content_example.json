@@ -1,0 +1,17 @@
+{
+  "_comment": "EXAMPLE ONLY - annual-fund wording for the ASPCA. Generate a real one per campaign with: python scripts/render_letters.py asks_review.csv letters/ --emit-content content.json. Keys are donor segments from the review CSV's 'segment' column. Values are inserted into the letter as HTML, so inline markup works; never put donor-specific data in them (the renderer does not escape these blocks, and one block is shared by every donor in the segment). This file is not read by any script - it exists to show the expected shape.",
+  "campaign_paragraphs": {
+    "Platinum": "Your partnership has shaped what this organization is able to do, year after year. As we plan the year ahead, supporters at your level make it possible to commit to the long-term rescue and rehabilitation work that shorter-term funding cannot sustain.",
+    "Gold": "Consistent supporters like you are the reason we can plan beyond the next emergency. Your giving has helped us keep our shelters staffed, our clinics open, and our field teams ready to respond.",
+    "Silver": "Every year, supporters like you make the everyday work possible: the vaccinations, the foster placements, the quiet follow-up visits that never make the news. Your steady giving is what keeps that work funded.",
+    "Bronze": "Gifts of every size add up to something real here. Last year, support from donors like you helped place animals in permanent homes and kept our emergency line answered around the clock.",
+    "Lapsed": "It has been a little while since we last heard from you, and we wanted to say that your earlier support still matters to the animals it helped. There is a place for you here whenever you are ready to return."
+  },
+  "tier_lines": {
+    "Platinum": "If you would like to explore naming opportunities associated with a gift at this level, I would welcome the chance to discuss them with you directly.",
+    "Gold": "If you have ever considered including us in your long-term plans, our team would be glad to talk with you about legacy giving.",
+    "Silver": "If it suits you better, this can be spread across the year as a monthly gift - many supporters find that easier to plan around.",
+    "Bronze": "If you would like to multiply your impact, you can also start a personal fundraising page and invite friends to give alongside you.",
+    "Lapsed": "Whatever amount feels right is genuinely welcome - the point is simply to have you back."
+  }
+}
