@@ -1,4 +1,4 @@
-# charity-donor-outreach
+# Charity Donor Outreach
 
 An AI agent skill that turns a donor CSV export into per-donor draft
 fundraising letters, with the money maths and the safety checks done by
@@ -170,6 +170,7 @@ default rather than silently shipping letters.
 | `large_ask_review` | Ask exceeds `--review-threshold` |
 | `missing_name`, `missing_lifetime_total`, `missing_largest_gift` | Required data absent |
 | `negative_lifetime_total`, `negative_largest_gift` | Refund or reversal artefacts |
+| `non_finite_lifetime_total`, `non_finite_largest_gift` | `Infinity` or `NaN` in a money column |
 | `missing_or_invalid_last_gift_year`, `last_gift_year_after_campaign_year`, `implausible_last_gift_year` | Unusable gift date |
 | `duplicate_donor_name`, `duplicate_donor_id` | Would produce two letters, or overwrite one |
 | `cannot_compute_ask_without_largest_gift` | No basis for a percentage ask |
@@ -205,9 +206,14 @@ python scripts/render_letters.py <review.csv> <output_dir> [options]
 | `--charity`, `--donation-url`, `--signer-name`, `--signer-title` | Campaign inputs. All required to render |
 | `--template PATH` | Defaults to the bundled `assets/letter_template.html` |
 | `--date YYYY-MM-DD` | Letter date. Defaults to today |
-| `--limit N` | Render at most N letters, for previews |
+| `--limit N` | Render at most N letters, for previews. Must be 1 or greater |
 | `--include-flagged` | Also render NEEDS_REVIEW rows, after staff have reviewed them |
-| `--force` | Overwrite letters already in the output directory |
+| `--force` | Clear the previous run's letters and manifest, then render |
+
+The closing call to action is not an option: it follows the `channel`
+column recorded in the review CSV, so a printed letter never tells the
+donor to hit reply. A review file containing more than one channel is
+refused, since those rows had different suppression rules applied.
 
 Both scripts exit `0` on success, `1` on a fatal input or config error
 (always with a single `ERROR: ...` line, never a traceback), and `2` on bad
@@ -226,8 +232,14 @@ These are enforced in code, not left to the model:
   travel further than file contents.
 - **A leftover `[PLACEHOLDER]` is a fatal error**, not a letter mailed with a
   literal bracket in it.
-- **A non-empty output directory needs `--force`**, so two campaigns can't be
-  silently mixed.
+- **Existing managed output needs `--force`**, and `--force` clears the
+  previous run rather than writing over part of it, so a shorter second run
+  can't leave another campaign's letters behind. Every letter is preflighted
+  before the clear, so input, content and template failures leave the last
+  good campaign intact.
+- **Filenames are resolved for the whole batch before anything is written**,
+  and compared case-insensitively, so `D1` and `d1` are refused instead of
+  one silently overwriting the other on Windows or macOS.
 
 ## Tests
 
@@ -235,10 +247,13 @@ These are enforced in code, not left to the model:
 python -m unittest discover -s tests -v
 ```
 
-50 tests, no dependencies. They cover the rules, every refusal path, and the
-defects found during review - banker's rounding on ties, negative amounts
-producing confident asks, a capped ask escaping the review gate, and
-channel-blind suppression.
+63 tests, no dependencies. They cover the business rules, the refusal paths,
+and every defect found in review so far - banker's rounding on ties, negative
+and non-finite amounts producing confident asks, a capped ask escaping the
+review gate, channel-blind suppression and an email-only call to action,
+partial policy overrides crashing mid-run, `--force` leaving stale letters
+behind or clearing good output before a template failure, case-only donor ID
+collisions, nested policy-key typos, and an unvalidated `--limit`.
 
 The golden-file test pins the full 50-donor output. Any change to a rule
 shows up as a reviewable diff rather than a silent shift in what donors get
@@ -250,8 +265,13 @@ python scripts/compute_asks.py tests/fixtures/donors_sample.csv tests/golden/ask
 
 ## Installing as a skill
 
-The directory name must match the `name` field in `SKILL.md`'s frontmatter,
-so rename this folder to `charity-donor-outreach` before installing it.
+Drop the directory wherever your agent looks for skills. The folder name must
+match the `name` field in `SKILL.md`'s frontmatter, which cloning this
+repository gives you already.
+
+Nothing here is tied to a particular assistant: `SKILL.md` is plain Markdown
+with YAML frontmatter, and the two scripts are ordinary Python with a
+command-line interface.
 
 ## Design notes
 
@@ -264,6 +284,10 @@ in a prompt.
 **Why the maths is a script.** A language model doing seven-step arithmetic
 in its head gives different answers on different runs and leaves the charity
 no audit trail. Here, any ask can be traced to the policy that produced it.
+
+Partial `tier_rates` and `flat_asks` objects merge over the defaults. Tier
+names inside those objects are validated too, so a typo such as `Goold` fails
+loudly instead of being silently ignored.
 
 **Why the letters are a script too.** Making the numbers deterministic while
 the assistant hand-writes each letter solves half the problem. Hand-written

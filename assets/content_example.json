@@ -1,17 +1,17 @@
 {
-  "_comment": "EXAMPLE ONLY - annual-fund wording for the ASPCA. Generate a real one per campaign with: python scripts/render_letters.py asks_review.csv letters/ --emit-content content.json. Keys are donor segments from the review CSV's 'segment' column. Values are inserted into the letter as HTML, so inline markup works; never put donor-specific data in them (the renderer does not escape these blocks, and one block is shared by every donor in the segment). This file is not read by any script - it exists to show the expected shape.",
+  "_comment": "EXAMPLE ONLY - neutral annual-fund wording that demonstrates the required shape without asserting program statistics, outcomes, benefits, matches, naming opportunities, or other unconfirmed facts. Generate a real file per campaign with: python scripts/render_letters.py asks_review.csv letters/ --emit-content content.json. Keys are donor segments from the review CSV's 'segment' column. Values are inserted into the letter as HTML, so inline markup works; never put donor-specific data in them (the renderer does not escape these blocks, and one block is shared by every donor in the segment). This file is not read automatically by either script.",
   "campaign_paragraphs": {
-    "Platinum": "Your partnership has shaped what this organization is able to do, year after year. As we plan the year ahead, supporters at your level make it possible to commit to the long-term rescue and rehabilitation work that shorter-term funding cannot sustain.",
-    "Gold": "Consistent supporters like you are the reason we can plan beyond the next emergency. Your giving has helped us keep our shelters staffed, our clinics open, and our field teams ready to respond.",
-    "Silver": "Every year, supporters like you make the everyday work possible: the vaccinations, the foster placements, the quiet follow-up visits that never make the news. Your steady giving is what keeps that work funded.",
-    "Bronze": "Gifts of every size add up to something real here. Last year, support from donors like you helped place animals in permanent homes and kept our emergency line answered around the clock.",
-    "Lapsed": "It has been a little while since we last heard from you, and we wanted to say that your earlier support still matters to the animals it helped. There is a place for you here whenever you are ready to return."
+    "Platinum": "Your longstanding generosity is deeply appreciated. As the organization plans for the year ahead, a renewed annual gift would provide flexible support for its mission.",
+    "Gold": "Your past generosity is sincerely appreciated. A renewed annual gift would help the organization continue pursuing its mission in the year ahead.",
+    "Silver": "Thank you for the support you have given in the past. We hope you will consider renewing that support through this year's annual campaign.",
+    "Bronze": "Every contribution is appreciated, and participation at any level matters. We hope you will consider taking part in this year's annual campaign.",
+    "Lapsed": "It has been a little while since we last heard from you, and we remain grateful for your earlier support. You would be warmly welcomed back whenever the time is right."
   },
   "tier_lines": {
-    "Platinum": "If you would like to explore naming opportunities associated with a gift at this level, I would welcome the chance to discuss them with you directly.",
-    "Gold": "If you have ever considered including us in your long-term plans, our team would be glad to talk with you about legacy giving.",
-    "Silver": "If it suits you better, this can be spread across the year as a monthly gift - many supporters find that easier to plan around.",
-    "Bronze": "If you would like to multiply your impact, you can also start a personal fundraising page and invite friends to give alongside you.",
-    "Lapsed": "Whatever amount feels right is genuinely welcome - the point is simply to have you back."
+    "Platinum": "If you would like to discuss ways to deepen your support, I would welcome a conversation.",
+    "Gold": "If you would like to explore longer-term ways to support the mission, our team would be glad to speak with you.",
+    "Silver": "A gift at the level that is right for you would be gratefully received.",
+    "Bronze": "Whatever amount feels right to you would be sincerely appreciated.",
+    "Lapsed": "Whatever amount feels right is genuinely welcome; the important thing is simply to reconnect."
   }
 }

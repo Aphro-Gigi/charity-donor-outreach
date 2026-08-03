@@ -105,8 +105,9 @@ the message and help them fix the file. Do not proceed on a guessed mapping.
 The business rules live in `DEFAULT_POLICY` inside the script, mirrored in
 `assets/default_ask_policy.json`. To change a rule, pass an edited copy via
 `--policy` and re-run. Never adjust numbers only in prose or letters. The
-script rejects unknown policy keys, so typos fail loudly. These are the
-client's business rules, not universal fundraising best practice; in
+script rejects unknown policy keys, including misspelled tier names inside
+`tier_rates` and `flat_asks`, so typos fail loudly. These are the client's
+business rules, not universal fundraising best practice; in
 particular, the +$100 volunteer bonus is enabled because the client's
 program specifies it, though some fundraising professionals consider raising
 an ask because someone volunteers to be poor practice. Disabling it is one
@@ -127,8 +128,9 @@ this. Surface these specifically:
   form letter.
 - `flat_ask_exceeds_review_multiple_of_largest_gift`, `ask_capped_at_largest_gift`,
   `large_ask_review`: ask-size sanity checks needing a human decision.
-- `negative_lifetime_total`, `negative_largest_gift`: refund or reversal
-  artefacts in the export. No ask is computed from them.
+- `negative_lifetime_total`, `negative_largest_gift`,
+  `non_finite_lifetime_total`, `non_finite_largest_gift`: refund artefacts
+  or corrupt values in the export. No ask is computed from them.
 - `duplicate_donor_name`, `duplicate_donor_id`: a donor must not receive two
   letters, and duplicate IDs would overwrite each other's letter file.
 - `suppressed_*`: these donors must not be contacted; say why per row.
@@ -173,6 +175,14 @@ This writes `letters/letter_<donor_id>.html` per donor plus
 manifest; filenames travel further than file contents. Provide the letters,
 the manifest, and `asks_review.csv` to the user.
 
+The closing call to action follows the channel recorded in the review CSV,
+so a printed letter does not tell the donor to hit reply. Don't pass a
+channel here; it comes from Step 1. Rendering into a directory that already
+holds letters needs `--force`, which clears the previous run first, so two
+campaigns cannot end up interleaved. The renderer preflights every letter
+before that clear, so a template or content error leaves the previous
+campaign intact.
+
 Do not paste the letters into the chat. At any realistic list size that is
 unreadable and error-prone. For a preview, render with `--limit 1` and show
 that single letter, or use `--limit 3` for a small list.
@@ -183,9 +193,10 @@ Tone is set by financial tier; the Lapsed engagement state overrides it.
 This matches the `segment` column, which is what the content file is keyed
 by.
 
-- **Platinum**: formal; mention a naming opportunity if the user has
-  confirmed one exists (a specific room/bench/program name from the user;
-  otherwise use general "naming opportunities are available" language).
+- **Platinum**: formal; mention a naming opportunity only if the user has
+  confirmed one exists (a specific room/bench/program name from the user).
+  Otherwise omit that claim and use a general invitation to discuss ways to
+  deepen support.
 - **Gold**: warm, professional; mention legacy giving options.
 - **Silver**: friendly; mention upgrading to monthly giving.
 - **Bronze**: casual, encouraging; mention peer fundraising pages.
@@ -221,8 +232,10 @@ by.
   intentional.
 - **Donor with lifetime giving but no `largest_gift`** -> NEEDS_REVIEW; the
   ask cannot be computed.
-- **Negative amounts** -> NEEDS_REVIEW; these are refund artefacts, not
-  donors who gave negative money.
+- **Negative or non-finite amounts** (`Infinity`, `NaN`) -> NEEDS_REVIEW;
+  these are refund or export artefacts, not donors who gave negative money.
+- **Donor IDs differing only in case** (`D1` and `d1`) -> NEEDS_REVIEW; they
+  resolve to the same letter file on Windows and macOS.
 - **User asks to change the formula** -> prefer `--policy` with an edited
   copy of `assets/default_ask_policy.json`. If the change doesn't fit the
   policy file, edit `scripts/compute_asks.py`, update its docstring and this
